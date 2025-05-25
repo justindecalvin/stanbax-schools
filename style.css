@@ -1,0 +1,75 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background-color: #f9f9f9;
+  color: #333;
+}
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #003366;
+  padding: 1rem 2rem;
+  color: white;
+}
+.navbar nav a {
+  margin-left: 1rem;
+  color: white;
+  text-decoration: none;
+}
+.hero {
+  background: linear-gradient(to right, #005c97, #363795);
+  padding: 4rem 2rem;
+  color: white;
+  text-align: center;
+}
+.logo {
+  width: 60px;
+  height: 60px;
+  margin-right: 1rem;
+  border-radius: 50%;      /* Makes it a circle */
+  object-fit: cover;       /* Ensures the image fits inside the circle */
+  border: 2px solid white; /* Optional: adds a white border */
+  background-color: white; /* Optional: fallback background */
+}
+.container {
+  padding: 2rem;
+  max-width: 900px;
+  margin: auto;
+}
+h2 {
+  color: #003366;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+input, button {
+  padding: 0.8rem;
+  font-size: 1rem;
+}
+button {
+  background-color: #003366;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.student-card {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.avatar {
+  width: 100px;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+}
+footer {
+  text-align: center;
+  background-color: #003366;
+  color: white;
+  padding: 1rem;
+}

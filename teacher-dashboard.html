@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Dashboard - Stanbax</title>
+  <link rel="stylesheet" href="dashboard.css" />
+  <script type="module" src="teacher-dashboard.js" defer></script>
+</head>
+<body>
+  <div class="dashboard">
+    <h2>Welcome, <span id="teacher-name">Teacher</span></h2>
+    <div class="card-section">
+      <div class="card">
+        <div class="card">
+  <h3>Upload Student Results</h3>
+  <input type="email" id="result-email" placeholder="Student Email" />
+  <textarea id="result-text" placeholder="Enter results (e.g. Math: A, English: B+)"></textarea>
+  <button id="submit-result-btn">Submit Result</button>
+  <p id="upload-result-msg"></p>
+</div>
+<div class="card">
+  <h3>Chat with a Teacher</h3>
+  <input type="email" id="chat-recipient" placeholder="Recipient's Email" />
+  <div id="chat-box" style="height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 5px;"></div>
+  <input type="text" id="chat-message" placeholder="Type a message" />
+  <button id="send-chat">Send</button>
+</div>
+      <div class="card">
+        <h3>Manage Payments</h3>
+        <p>Feature coming soon...</p>
+      </div>
+<button id="logout-btn">Logout</button>
+      <div class="card">
+        <h3>View Students</h3>
+        <ul id="student-list">Loading...</ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -135,11 +135,14 @@ const flushWrites = async () => {
   if (!supabase || !sessionToken) { pendingWrites.clear(); return; }
   const batch = [...pendingWrites.entries()];
   pendingWrites.clear();
-  const upserts = batch.filter(([, v]) => v !== null).map(([key, v]) => ({ key, data: JSON.parse(v as string) }));
+  const upserts = batch
+    .filter(([, v]) => v !== null)
+    .map(([key, v]) => ({ key, data: JSON.parse(v as string) }));
   const deletes = batch.filter(([, v]) => v === null).map(([k]) => k);
   try {
-    if (upserts.length) await supabase.from('school_state').upsert(upserts, { onConflict: 'key' });
-    if (deletes.length) await supabase.from('school_state').delete().in('key', deletes);
+    // RPCs preserve the is_public flag on the row; direct table writes can't
+    if (upserts.length) await supabase.rpc('put_states', { p_items: upserts });
+    if (deletes.length) await supabase.rpc('delete_states', { p_keys: deletes });
   } catch { /* best-effort; local copy already saved */ }
 };
 
@@ -188,8 +191,20 @@ export const hydrateFromSupabase = async (): Promise<void> => {
     suppressRemote = true;
     try {
       for (const row of data as Array<{ key: string; data: unknown }>) {
+        // Public-key marker rows are seeded with data=null — skip them so
+        // localStorage never holds the literal 'null' (which crashes the
+        // JSON.parse initializers) and bootstrap can fill them instead.
+        if (row.data === null || row.data === undefined) continue;
         remoteKeys.add(row.key);
         localStorage.setItem(row.key, JSON.stringify(row.data));
+      }
+      // Heal 'null'/'undefined' entries written by an earlier version.
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k?.startsWith('stanbax_')) {
+          const v = localStorage.getItem(k);
+          if (v === 'null' || v === 'undefined') localStorage.removeItem(k);
+        }
       }
     } finally {
       suppressRemote = false;

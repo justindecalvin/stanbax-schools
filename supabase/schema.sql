@@ -54,7 +54,7 @@ returns text language sql stable as $$
 $$;
 
 create or replace function public.valid_session()
-returns boolean language sql stable security definer set search_path = public as $$
+returns boolean language sql stable security definer set search_path = public, extensions as $$
   select exists (
     select 1 from public.sessions s
     where s.token = public.request_session_token()
@@ -63,7 +63,7 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 
 create or replace function public.session_role()
-returns text language sql stable security definer set search_path = public as $$
+returns text language sql stable security definer set search_path = public, extensions as $$
   select s.role from public.sessions s
   where s.token = public.request_session_token()
     and s.expires_at > now()
@@ -75,7 +75,7 @@ $$;
 --    wrong passwords return ok:false, no hashes ever leave the server.
 -- ---------------------------------------------------------------------------
 create or replace function public.verify_login(p_identifier text, p_password text)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare
   c record;
   t text;
@@ -104,7 +104,7 @@ begin
 end $$;
 
 create or replace function public.logout_session(p_token text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, extensions as $$
   delete from public.sessions where token = p_token
 $$;
 
@@ -112,7 +112,7 @@ $$;
 -- without it — sessions carry role, enforced inside the function).
 create or replace function public.change_password(
   p_identifier text, p_old_password text, p_new_password text)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare
   c record;
   r text := public.session_role();
@@ -139,7 +139,7 @@ end $$;
 -- create_credential: any valid session (admin adds students/parents/tutors).
 create or replace function public.create_credential(
   p_identifier text, p_password text, p_role text, p_ref_id text, p_aliases text[] default '{}')
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 begin
   if not public.valid_session() then
     return jsonb_build_object('ok', false, 'message', 'Not signed in.');
@@ -152,6 +152,29 @@ begin
         role          = excluded.role,
         ref_id        = excluded.ref_id;
   return jsonb_build_object('ok', true);
+end $$;
+
+-- put_states / delete_states: the ONLY write path for school_state — they
+-- upsert data while preserving each row's is_public flag (so the anonymous
+-- website keeps working after the first write to a public collection).
+create or replace function public.put_states(p_items jsonb)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.valid_session() then
+    raise exception 'Not signed in';
+  end if;
+  insert into public.school_state (key, data)
+    select (i->>'key'), (i->'data') from jsonb_array_elements(p_items) i
+  on conflict (key) do update set data = excluded.data, updated_at = now();
+end $$;
+
+create or replace function public.delete_states(p_keys text[])
+returns void language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.valid_session() then
+    raise exception 'Not signed in';
+  end if;
+  delete from public.school_state where key = any(p_keys);
 end $$;
 
 -- ---------------------------------------------------------------------------
@@ -187,6 +210,8 @@ grant execute on function public.verify_login(text, text)      to anon, authenti
 grant execute on function public.logout_session(text)          to anon, authenticated;
 grant execute on function public.change_password(text, text, text) to anon, authenticated;
 grant execute on function public.create_credential(text, text, text, text, text[]) to anon, authenticated;
+grant execute on function public.put_states(jsonb) to anon, authenticated;
+grant execute on function public.delete_states(text[]) to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 6. SEED CREDENTIALS (demo accounts — matches src/data/schoolData.ts)

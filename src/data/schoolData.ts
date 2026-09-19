@@ -128,6 +128,8 @@ export const DEFAULT_ASSESSMENT_CONFIG: AssessmentControlConfig = {
   activeSession: '2026/2027 Academic Session',
   activeTerm: '1st Term',
   activePhase: 'mid_term_ca',
+  midTermResultsPublished: false,
+  endTermResultsPublished: false,
   ca1Max: 10,
   ca2Max: 10,
   ca3Max: 10,

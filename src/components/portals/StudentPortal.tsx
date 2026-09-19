@@ -151,6 +151,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
   }, [isSideMenuOpen]);
   const [selectedSession, setSelectedSession] = useState<string>(assessmentConfig.activeSession || '2026/2027 Academic Session');
   const [reportTerm, setReportTerm] = useState<string>(schoolInfo.activeTerm || '1st Term (Michaelmas Term)');
+  // Two report cards per term: mid-term (CA1+CA2) and end-of-term (CA1–3+Exam).
+  // Admin publishes each independently via the collation desk.
+  const [reportCardKind, setReportCardKind] = useState<'mid' | 'end'>('end');
   const [viewMode, setViewMode] = useState<'term_sheet' | 'session_progression'>('term_sheet');
 
   // Homework is tracked per scholar: submissions[student.id] overrides the
@@ -239,6 +242,22 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
     ? historicalSession.promotionStatus
     : (student.promotionStatus || (displayIsPass ? 'Promoted' : 'Repeat'));
 
+  // Publication gate — applies only to the live session; archives always show.
+  const midPublished = !!assessmentConfig.midTermResultsPublished;
+  const endPublished = !!assessmentConfig.endTermResultsPublished;
+  const isMidSheet = isCurrentSession && reportCardKind === 'mid';
+  const kindPublished = !isCurrentSession || (isMidSheet ? midPublished : endPublished);
+
+  // Mid-term card = CA1 + CA2 (out of 20) rescaled to a percentage.
+  const reportGrades: GradeRecord[] = isMidSheet
+    ? displayGrades.map(g => {
+        const midTotal = (g.ca1 ?? 0) + (g.ca2 ?? 0);
+        const pct = Math.round(midTotal * 5);
+        const gi = calculateGrade(pct);
+        return { ...g, total: pct, grade: gi.grade, remark: gi.remark };
+      })
+    : displayGrades;
+
   const displayPromotedTo = historicalSession
     ? (historicalSession.promotedToGrade || getNextClass(historicalSession.classEnrolled))
     : (student.promotedToGrade || student.promotionTargetClass || getNextClass(student.grade));
@@ -319,7 +338,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
   </div>
 
   <div class="title-banner">
-    Continuous Assessment & Terminal Academic Progress Report (${reportTerm} &bull; ${selectedSession})
+    ${isMidSheet
+      ? `Mid-Term Continuous Assessment Report &mdash; 1st &amp; 2nd CA (${reportTerm} &bull; ${selectedSession})`
+      : `Continuous Assessment &amp; Terminal Academic Progress Report (${reportTerm} &bull; ${selectedSession})`}
   </div>
 
   <div class="student-section">
@@ -360,16 +381,16 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
         <th class="sub-col">Curriculum Subject</th>
         <th>1st CA (${assessmentConfig.ca1Max ?? 10})</th>
         <th>2nd CA (${assessmentConfig.ca2Max ?? 10})</th>
-        <th>3rd CA (${assessmentConfig.ca3Max ?? 10})</th>
-        <th>Exam (${assessmentConfig.examMax ?? 70})</th>
-        <th>Term Total (100)</th>
+        ${isMidSheet ? '' : `<th>3rd CA (${assessmentConfig.ca3Max ?? 10})</th>
+        <th>Exam (${assessmentConfig.examMax ?? 70})</th>`}
+        <th>${isMidSheet ? 'Mid Total (20)' : 'Term Total (100)'}</th>
         <th>Grade</th>
-        ${is3rdTerm ? '<th>T1 (100)</th><th>T2 (100)</th><th>Annual Avg</th>' : ''}
+        ${is3rdTerm && !isMidSheet ? '<th>T1 (100)</th><th>T2 (100)</th><th>Annual Avg</th>' : ''}
         <th>Faculty Remark</th>
       </tr>
     </thead>
     <tbody>
-      ${displayGrades.map(g => {
+      ${reportGrades.map(g => {
         const gInfo = calculateGrade(g.total);
         const t1 = g.term1Total ?? Math.max(70, g.total - 3);
         const t2 = g.term2Total ?? Math.max(72, g.total + 2);
@@ -379,11 +400,11 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
           <td class="sub-col">${g.subject}</td>
           <td>${g.ca1}</td>
           <td>${g.ca2}</td>
-          <td>${g.ca3 ?? 8}</td>
-          <td>${g.exam}</td>
-          <td style="font-weight: 800; color: #1e3a8a;">${g.total}%</td>
+          ${isMidSheet ? '' : `<td>${g.ca3 ?? 8}</td>
+          <td>${g.exam}</td>`}
+          <td style="font-weight: 800; color: #1e3a8a;">${isMidSheet ? `${(g.ca1 ?? 0) + (g.ca2 ?? 0)}/20 (${g.total}%)` : `${g.total}%`}</td>
           <td><span class="grade-badge">${g.grade || gInfo.grade}</span></td>
-          ${is3rdTerm ? `<td>${t1}%</td><td>${t2}%</td><td style="font-weight: 900; color: #0f172a; background: #fef3c7;">${ann}%</td>` : ''}
+          ${is3rdTerm && !isMidSheet ? `<td>${t1}%</td><td>${t2}%</td><td style="font-weight: 900; color: #0f172a; background: #fef3c7;">${ann}%</td>` : ''}
           <td style="font-style: italic;">${g.remark || gInfo.remark}</td>
         </tr>`;
       }).join('')}
@@ -1250,8 +1271,9 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                   {/* Download Official Result Button */}
                   <button
                     onClick={handleDownloadHtmlResult}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
-                    title="Download offline official transcript file"
+                    disabled={!kindPublished}
+                    className="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={kindPublished ? 'Download offline official transcript file' : 'Not yet published by administration'}
                   >
                     <Download className="w-4 h-4 text-emerald-200" />
                     <span>Download Result (.html)</span>
@@ -1260,7 +1282,8 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                   {/* Print / Save PDF Button */}
                   <button
                     onClick={() => window.print()}
-                    className="px-4 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
+                    disabled={!kindPublished}
+                    className="px-4 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Printer className="w-4 h-4 text-amber-400" />
                     <span>Print / Save PDF</span>
@@ -1380,6 +1403,48 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
 
             {/* VIEW MODE 1: TERMINAL REPORT CARD */}
             {viewMode === 'term_sheet' && (
+              <>
+              {/* Mid-Term / End-of-Term card selector (current session only) */}
+              {isCurrentSession && (
+                <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs w-fit">
+                  <button
+                    onClick={() => setReportCardKind('mid')}
+                    className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all ${
+                      reportCardKind === 'mid'
+                        ? 'bg-blue-900 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
+                  >
+                    {!midPublished && <Lock className="w-3 h-3" />}
+                    <span>Mid-Term Report (CA 1 + CA 2)</span>
+                  </button>
+                  <button
+                    onClick={() => setReportCardKind('end')}
+                    className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all ${
+                      reportCardKind === 'end'
+                        ? 'bg-blue-900 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                    }`}
+                  >
+                    {!endPublished && <Lock className="w-3 h-3" />}
+                    <span>End-of-Term Report (CA 1–3 + Exam)</span>
+                  </button>
+                </div>
+              )}
+
+              {!kindPublished ? (
+                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-10 text-center">
+                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h4 className="font-black text-slate-900 mt-4">
+                    {isMidSheet ? 'Mid-Term' : 'End-of-Term'} Results Not Yet Published
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                    The school administration is still collating and moderating scores. This report card will appear here automatically once officially released.
+                  </p>
+                </div>
+              ) : (
               <div id="official-result-sheet" className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden print:border-none print:shadow-none">
                 {/* Institution and Term Header Banner with Logo, School Name, and Phone Number */}
                 <div className="p-6 sm:p-8 bg-gradient-to-r from-blue-950 via-blue-900 to-indigo-950 text-white relative">
@@ -1426,6 +1491,13 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                       <div className="text-xs font-extrabold text-blue-200 bg-blue-800/60 px-2.5 py-1 rounded-md inline-block">
                         {reportTerm}
                       </div>
+                      {isCurrentSession && (
+                        <div className={`text-[10px] font-extrabold px-2.5 py-1 rounded-md inline-block uppercase tracking-wider ${
+                          isMidSheet ? 'bg-cyan-500/80 text-blue-950' : 'bg-amber-400/90 text-blue-950'
+                        }`}>
+                          {isMidSheet ? 'Mid-Term Card (CA 1 + CA 2)' : 'End-of-Term Card (CA 1-3 + Exam)'}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1565,11 +1637,15 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                         <th className="py-3.5 px-4 sm:px-6">Subject</th>
                         <th className="py-3.5 px-3 text-center">CA 1 ({assessmentConfig.ca1Max ?? 10})</th>
                         <th className="py-3.5 px-3 text-center">CA 2 ({assessmentConfig.ca2Max ?? 10})</th>
-                        <th className="py-3.5 px-3 text-center">CA 3 ({assessmentConfig.ca3Max ?? 10})</th>
-                        <th className="py-3.5 px-3 text-center">Exam ({assessmentConfig.examMax ?? 70})</th>
-                        <th className="py-3.5 px-3 text-center font-black">Term Total (100)</th>
+                        {!isMidSheet && (
+                          <>
+                            <th className="py-3.5 px-3 text-center">CA 3 ({assessmentConfig.ca3Max ?? 10})</th>
+                            <th className="py-3.5 px-3 text-center">Exam ({assessmentConfig.examMax ?? 70})</th>
+                          </>
+                        )}
+                        <th className="py-3.5 px-3 text-center font-black">{isMidSheet ? 'Mid Total (20)' : 'Term Total (100)'}</th>
                         <th className="py-3.5 px-3 text-center">Grade</th>
-                        {is3rdTerm && (
+                        {is3rdTerm && !isMidSheet && (
                           <>
                             <th className="py-3.5 px-3 text-center bg-blue-50/50 text-blue-900">1st Term</th>
                             <th className="py-3.5 px-3 text-center bg-blue-50/50 text-blue-900">2nd Term</th>
@@ -1580,7 +1656,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-xs sm:text-sm">
-                      {displayGrades.map((g, idx) => {
+                      {reportGrades.map((g, idx) => {
                         const gradeInfo = calculateGrade(g.total);
                         const t1 = g.term1Total ?? Math.max(70, g.total - 3);
                         const t2 = g.term2Total ?? Math.max(72, g.total + 2);
@@ -1592,16 +1668,22 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                             <td className="py-3 px-4 sm:px-6 font-black text-slate-900">{g.subject}</td>
                             <td className="py-3 px-3 text-center text-slate-700 font-semibold">{g.ca1}</td>
                             <td className="py-3 px-3 text-center text-slate-700 font-semibold">{g.ca2}</td>
-                            <td className="py-3 px-3 text-center text-slate-700 font-semibold">{g.ca3 ?? 8}</td>
-                            <td className="py-3 px-3 text-center text-slate-700 font-semibold">{g.exam}</td>
-                            <td className="py-3 px-3 text-center font-black text-blue-950">{g.total}%</td>
+                            {!isMidSheet && (
+                              <>
+                                <td className="py-3 px-3 text-center text-slate-700 font-semibold">{g.ca3 ?? 8}</td>
+                                <td className="py-3 px-3 text-center text-slate-700 font-semibold">{g.exam}</td>
+                              </>
+                            )}
+                            <td className="py-3 px-3 text-center font-black text-blue-950">
+                              {isMidSheet ? `${(g.ca1 ?? 0) + (g.ca2 ?? 0)}/20 (${g.total}%)` : `${g.total}%`}
+                            </td>
                             <td className="py-3 px-3 text-center">
                               <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-900 font-black text-xs font-mono">
                                 {gradeInfo.grade || g.grade}
                               </span>
                             </td>
 
-                            {is3rdTerm && (
+                            {is3rdTerm && !isMidSheet && (
                               <>
                                 <td className="py-3 px-3 text-center text-slate-600 bg-blue-50/30">{t1}%</td>
                                 <td className="py-3 px-3 text-center text-slate-600 bg-blue-50/30">{t2}%</td>
@@ -1620,7 +1702,7 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                 </div>
 
                 {/* 3rd Term Annual Average & Automatic Promotion Verdict Section */}
-                {is3rdTerm && (
+                {is3rdTerm && !isMidSheet && (
                   <div className="p-6 bg-amber-50/60 border-t border-amber-200">
                     <div className="rounded-2xl bg-white p-5 border border-amber-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
                       <div className="space-y-1">
@@ -1705,6 +1787,8 @@ export const StudentPortal: React.FC<StudentPortalProps> = ({ onBackToWebsite })
                   </div>
                 </div>
               </div>
+              )}
+              </>
             )}
 
             {/* VIEW MODE 2: SESSION PROGRESSION & MULTI-YEAR LEDGER */}

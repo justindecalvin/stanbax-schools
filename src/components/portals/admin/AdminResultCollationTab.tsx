@@ -88,6 +88,29 @@ export const AdminResultCollationTab: React.FC = () => {
     setTimeout(() => setSuccessMsg(''), 3500);
   };
 
+  const handlePublicationToggle = (kind: 'mid' | 'end') => {
+    if (kind === 'mid') {
+      const next = !assessmentConfig.midTermResultsPublished;
+      updateAssessmentConfig({
+        midTermResultsPublished: next,
+        midTermPublishedAt: next ? new Date().toISOString() : undefined,
+      });
+      setSuccessMsg(next
+        ? 'Mid-Term report card (CA 1 + CA 2) published — now live on scholar & parent dashboards.'
+        : 'Mid-Term report card unpublished — hidden from scholar & parent dashboards.');
+    } else {
+      const next = !assessmentConfig.endTermResultsPublished;
+      updateAssessmentConfig({
+        endTermResultsPublished: next,
+        endTermPublishedAt: next ? new Date().toISOString() : undefined,
+      });
+      setSuccessMsg(next
+        ? 'End-of-Term report card (CA 1–3 + Examination) published — now live on scholar & parent dashboards.'
+        : 'End-of-Term report card unpublished — hidden from scholar & parent dashboards.');
+    }
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -190,6 +213,68 @@ export const AdminResultCollationTab: React.FC = () => {
               </p>
             </button>
           </div>
+        </div>
+
+        {/* Panel 1B: Results Publication Control */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-4 text-xs">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <Award className="w-4 h-4 text-emerald-700" />
+            <h3 className="font-black text-slate-900 text-sm">Report Card Publication</h3>
+          </div>
+
+          <p className="text-slate-500">
+            Controls when results appear on scholar and parent dashboards. Unpublished results stay hidden even if scores are collated.
+          </p>
+
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => handlePublicationToggle('mid')}
+              className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                assessmentConfig.midTermResultsPublished
+                  ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center justify-between font-black text-xs">
+                <span>📋 Mid-Term Report (CA 1 + CA 2)</span>
+                {assessmentConfig.midTermResultsPublished
+                  ? <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                  : <Lock className="w-4 h-4 text-slate-400" />}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-normal">
+                {assessmentConfig.midTermResultsPublished
+                  ? `Live on scholar dashboards${assessmentConfig.midTermPublishedAt ? ` since ${new Date(assessmentConfig.midTermPublishedAt).toLocaleString()}` : ''}. Tap to unpublish.`
+                  : 'Hidden from scholars. Tap to publish the mid-term CA summary card.'}
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handlePublicationToggle('end')}
+              className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                assessmentConfig.endTermResultsPublished
+                  ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              <div className="flex items-center justify-between font-black text-xs">
+                <span>🏅 End-of-Term Report (CA 1–3 + Exam)</span>
+                {assessmentConfig.endTermResultsPublished
+                  ? <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                  : <Lock className="w-4 h-4 text-slate-400" />}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1 font-normal">
+                {assessmentConfig.endTermResultsPublished
+                  ? `Live on scholar dashboards${assessmentConfig.endTermPublishedAt ? ` since ${new Date(assessmentConfig.endTermPublishedAt).toLocaleString()}` : ''}. Tap to unpublish.`
+                  : 'Hidden from scholars. Tap to publish the full terminal report card.'}
+              </p>
+            </button>
+          </div>
+
+          <p className="text-[11px] text-slate-400 italic">
+            Tip: set the phase to "Collation Closed" before publishing to freeze score entry first.
+          </p>
         </div>
 
         {/* Panel 2: Term and Session Controls */}

@@ -220,7 +220,8 @@ export const TutorPortal: React.FC<TutorPortalProps> = ({ onBackToWebsite }) => 
       ? Number(ca1Input) + Number(ca2Input)
       : Number(ca1Input) + Number(ca2Input) + Number(ca3Input) + Number(examInput);
 
-    setGradeSaveMsg(`Successfully recorded official score for ${selectedSubject} (${calculatedTotal}${isMidTermOnly ? '/40 Mid-Term' : '%'}) for ${activeScholar.name}!`);
+    const midMax = (assessmentConfig.ca1Max ?? 10) + (assessmentConfig.ca2Max ?? 10);
+    setGradeSaveMsg(`Successfully recorded official score for ${selectedSubject} (${calculatedTotal}${isMidTermOnly ? `/${midMax} Mid-Term` : '%'}) for ${activeScholar.name}!`);
     setTimeout(() => setGradeSaveMsg(''), 3500);
   };
 

@@ -419,6 +419,10 @@ export interface AssessmentControlConfig {
   activeSession: string;
   activeTerm: '1st Term' | '2nd Term' | '3rd Term';
   activePhase: AssessmentEntryPhase;
+  midTermResultsPublished?: boolean;
+  midTermPublishedAt?: string;
+  endTermResultsPublished?: boolean;
+  endTermPublishedAt?: string;
   ca1Max: number;
   ca2Max: number;
   ca3Max: number;

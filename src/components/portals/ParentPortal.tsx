@@ -51,7 +51,8 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
     sickBayLogs,
     notices,
     classes,
-    timetables
+    timetables,
+    assessmentConfig
   } = useSchool();
 
   // If not authenticated, render login
@@ -102,6 +103,13 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
   const [paymentMethod, setPaymentMethod] = useState<'Bank Transfer' | 'POS' | 'Direct Deposit' | 'Online WebPay'>('Bank Transfer');
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentSuccessMsg, setPaymentSuccessMsg] = useState('');
+
+  // Report card kind (mid-term CA card vs end-of-term exam card)
+  const [reportCardKind, setReportCardKind] = useState<'mid' | 'end'>('mid');
+  const midPublished = assessmentConfig.midTermResultsPublished === true;
+  const endPublished = assessmentConfig.endTermResultsPublished === true;
+  const isMidSheet = reportCardKind === 'mid';
+  const kindPublished = isMidSheet ? midPublished : endPublished;
 
   // Print Report Card helper
   const handlePrintChildReport = () => {
@@ -518,6 +526,48 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
         {/* TAB 2: ACADEMICS & REPORT SHEET */}
         {activeTab === 'academics' && (
           <div className="space-y-6">
+            {/* Report card kind selector — mirrors the scholar portal gate */}
+            <div className="flex flex-wrap items-center gap-1.5 bg-stone-100 p-1 rounded-xl border border-stone-200 text-xs w-fit">
+              <button
+                type="button"
+                onClick={() => setReportCardKind('mid')}
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all ${
+                  reportCardKind === 'mid'
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
+                }`}
+              >
+                {!midPublished && <Lock className="w-3 h-3" />}
+                <span>Mid-Term (CA 1 + CA 2)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportCardKind('end')}
+                className={`px-3 py-1.5 rounded-lg font-bold text-xs flex items-center gap-1.5 cursor-pointer transition-all ${
+                  reportCardKind === 'end'
+                    ? 'bg-stone-900 text-white shadow-xs'
+                    : 'text-stone-600 hover:text-stone-900 hover:bg-white/60'
+                }`}
+              >
+                {!endPublished && <Lock className="w-3 h-3" />}
+                <span>End-of-Term (CA 1–3 + Exam)</span>
+              </button>
+            </div>
+
+            {!kindPublished ? (
+              <div className="bg-white rounded-3xl border border-stone-200 shadow-xs p-10 text-center">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <h4 className="font-black text-stone-900 mt-4">
+                  {isMidSheet ? 'Mid-Term' : 'End-of-Term'} Results Not Yet Published
+                </h4>
+                <p className="text-xs text-stone-500 mt-1 max-w-md mx-auto">
+                  The school administration is still collating and moderating scores. {selectedChild.name}'s report card will appear here automatically once officially released.
+                </p>
+              </div>
+            ) : (
+            <>
             <div className="bg-white p-6 rounded-3xl border border-stone-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-black text-stone-900">
@@ -534,7 +584,7 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
                   className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black transition flex items-center gap-2 cursor-pointer shadow-xs"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>Download Official Terminal Dossier</span>
+                  <span>Download {isMidSheet ? 'Mid-Term Report' : 'Official Terminal Dossier'}</span>
                 </button>
               </div>
             </div>
@@ -546,10 +596,15 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
                   <thead>
                     <tr className="bg-stone-50 border-b border-stone-200 text-stone-700 font-black uppercase text-[11px]">
                       <th className="py-3.5 px-4">Subject</th>
-                      <th className="py-3.5 px-3 text-center">1st CA (20)</th>
-                      <th className="py-3.5 px-3 text-center">2nd CA (20)</th>
-                      <th className="py-3.5 px-3 text-center">Exam (60)</th>
-                      <th className="py-3.5 px-3 text-center">Total (100)</th>
+                      <th className="py-3.5 px-3 text-center">1st CA ({assessmentConfig.ca1Max ?? 10})</th>
+                      <th className="py-3.5 px-3 text-center">2nd CA ({assessmentConfig.ca2Max ?? 10})</th>
+                      {!isMidSheet && (
+                        <>
+                          <th className="py-3.5 px-3 text-center">3rd CA ({assessmentConfig.ca3Max ?? 10})</th>
+                          <th className="py-3.5 px-3 text-center">Exam ({assessmentConfig.examMax ?? 70})</th>
+                        </>
+                      )}
+                      <th className="py-3.5 px-3 text-center">{isMidSheet ? 'Mid Total (20)' : 'Total (100)'}</th>
                       <th className="py-3.5 px-3 text-center">Grade</th>
                       <th className="py-3.5 px-4">Subject Tutor Remark</th>
                     </tr>
@@ -560,8 +615,17 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
                         <td className="py-3 px-4 font-black text-stone-900">{gradeRecord.subject}</td>
                         <td className="py-3 px-3 text-center font-bold text-stone-700">{gradeRecord.ca1}</td>
                         <td className="py-3 px-3 text-center font-bold text-stone-700">{gradeRecord.ca2}</td>
-                        <td className="py-3 px-3 text-center font-bold text-stone-700">{gradeRecord.exam}</td>
-                        <td className="py-3 px-3 text-center font-black text-stone-950">{gradeRecord.total}</td>
+                        {!isMidSheet && (
+                          <>
+                            <td className="py-3 px-3 text-center font-bold text-stone-700">{gradeRecord.ca3 ?? 0}</td>
+                            <td className="py-3 px-3 text-center font-bold text-stone-700">{gradeRecord.exam}</td>
+                          </>
+                        )}
+                        <td className="py-3 px-3 text-center font-black text-stone-950">
+                          {isMidSheet
+                            ? `${(gradeRecord.ca1 ?? 0) + (gradeRecord.ca2 ?? 0)}/20`
+                            : gradeRecord.total}
+                        </td>
                         <td className="py-3 px-3 text-center">
                           <span className={`px-2.5 py-0.5 rounded-md font-black text-[11px] ${
                             gradeRecord.grade === 'A1' ? 'bg-emerald-100 text-emerald-800' :
@@ -579,6 +643,8 @@ export const ParentPortal: React.FC<ParentPortalProps> = ({ onBackToWebsite }) =
                 </table>
               </div>
             </div>
+            </>
+            )}
           </div>
         )}
 

@@ -1,89 +1,21 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stanbax Schools Ibadan</title>
-  <link rel="stylesheet" href="style.css"/>
-  <script src="script.js" defer></script>
-</head>
-<body>
-  <header class="navbar">
-    <h1>Stanbax Schools Ibadan</h1>
-    <nav>
-<div class="brand">
-  <img src="logo.png" alt="Stanbax Logo" class="logo">
-      <a href="#about">About</a>
-      <a href="#assignments">Assignments</a>
-      <a href="#results">Results</a>
-      <a href="#profile">Student Portal</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
-
-  <section class="hero">
-    <h2>Empowering Minds, Shaping the Future</h2>
-    <p>Welcome to Stanbax Schools Ibadan – excellence in education and values.</p>
-  </section>
-
-  <section id="about" class="container">
-    <h2>About Stanbax</h2>
-    <p>Stanbax Schools is a leading private school in Ibadan committed to academic excellence and moral discipline. We foster innovation, creativity, and success through tech-driven learning.</p>
-  </section>
-
-  <section id="assignments" class="container">
-    <h2>Assignment Submission</h2>
-    <form id="assignment-form">
-      <input type="text" placeholder="Student Name" required>
-      <input type="text" placeholder="Subject" required>
-      <input type="file" required>
-      <button type="submit">Upload Assignment</button>
-    </form>
-  </section>
-
-  <section id="results" class="container">
-    <h2>Check Results</h2>
-    <form id="result-form">
-      <input type="text" placeholder="Student ID" required>
-      <input type="text" placeholder="Term (e.g. First Term)" required>
-      <button type="submit">View Result</button>
-    </form>
-    <div id="result-output"></div>
-  </section>
-
-  <section id="profile" class="container">
-    <h2>Student Profile & Progress</h2>
-    <div class="student-card">
-      <img src="student.jpg" alt="Student" class="avatar">
-      <h3>Jane Doe</h3>
-      <p>Class: JS3</p>
-      <p>Progress: 85%</p>
-      <progress value="85" max="100"></progress>
-    </div>
-  </section>
-
-  <section class="container" id="payment">
-    <h2>Payment Details</h2>
-    <p><strong>Account Name:</strong> Stanbax Schools Ibadan</p>
-    <p><strong>Account Number:</strong> 1234567890</p>
-    <p><strong>Bank:</strong> Stanbic IBTC</p>
-    <p>After payment, send proof to <strong>admin@stanbax.com</strong> or upload below:</p>
-    <form>
-      <input type="file" />
-      <button>Submit Payment Proof</button>
-    </form>
-  </section>
-
-</header>
-  <section id="contact" class="container">
-    <h2>Contact Us</h2>
-    <p>Phone: +234-801-234-5678</p>
-    <p>Email: info@stanbax.com</p>
-    <p>Address: 15 Knowledge Lane, Ibadan, Oyo State</p>
-  </section>
-
-  <footer>
-    <p>&copy; 2025 Stanbax Schools Ibadan. All rights reserved.</p>
-  </footer>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stanbax Schools Ibadan</title>
+    <meta name="description" content="Official portal and learning platform for Stanbax Schools Ibadan, featuring academic programs, faculty, student testimonials, and admissions." />
+    <meta property="og:title" content="Stanbax Schools Ibadan" />
+    <meta property="og:description" content="Official portal and learning platform for Stanbax Schools Ibadan, featuring academic programs, faculty, student testimonials, and admissions." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Nunito:wght@600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-slate-50 text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
+

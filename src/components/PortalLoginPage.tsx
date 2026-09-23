@@ -331,69 +331,7 @@ export const PortalLoginPage: React.FC<PortalLoginPageProps> = ({
                 </div>
               </div>
 
-              {/* Quick Demo Fill Buttons for Fast Evaluation */}
-              <div className="pt-2">
-                <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider text-center mb-1.5">
-                  Instant Test Sign-In (Click to Autofill)
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIdentifier('admin');
-                      setPassword(import.meta.env.VITE_ADMIN_PASSWORD || 'Justin2000.');
-                      setErrorMessage('');
-                    }}
-                    className="p-1.5 rounded-lg bg-neutral-100 hover:bg-amber-100 text-neutral-800 font-bold border border-neutral-200 transition text-center cursor-pointer"
-                  >
-                    🛡️ Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIdentifier('proprietress');
-                      setPassword(import.meta.env.VITE_PROPRIETRESS_PASSWORD || 'Proprietress2025!');
-                      setErrorMessage('');
-                    }}
-                    className="p-1.5 rounded-lg bg-neutral-100 hover:bg-amber-100 text-neutral-800 font-bold border border-neutral-200 transition text-center cursor-pointer"
-                  >
-                    👑 Proprietress
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIdentifier('folake.adeyemi@stanbaxschools.edu.ng');
-                      setPassword('stanbax2025');
-                      setErrorMessage('');
-                    }}
-                    className="p-1.5 rounded-lg bg-neutral-100 hover:bg-amber-100 text-neutral-800 font-bold border border-neutral-200 transition text-center cursor-pointer"
-                  >
-                    🧑‍🏫 Tutor
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIdentifier('STX/2023/042');
-                      setPassword('stanbax2025');
-                      setErrorMessage('');
-                    }}
-                    className="p-1.5 rounded-lg bg-neutral-100 hover:bg-amber-100 text-neutral-800 font-bold border border-neutral-200 transition text-center cursor-pointer"
-                  >
-                    🎓 Scholar (Tiwa)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIdentifier('adeleke.family@gmail.com');
-                      setPassword('parent2025');
-                      setErrorMessage('');
-                    }}
-                    className="p-1.5 rounded-lg bg-neutral-100 hover:bg-amber-100 text-neutral-800 font-bold border border-neutral-200 transition text-center col-span-2 sm:col-span-1 cursor-pointer"
-                  >
-                    👨‍👩‍👧 Parent (Adeleke)
-                  </button>
-                </div>
-              </div>
+             
 
               {/* Submit Button */}
               <button
